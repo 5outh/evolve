@@ -24,7 +24,6 @@ Selection: tournament
 Mutation (no crossover?): change one of (x,y) with probability 2/N (on average, 4 coordinates total will change) 
 """
 
-
 # size of board
 toolbox = base.Toolbox()
 
@@ -156,15 +155,6 @@ def elem(p, ps):
             return True
     return False
 
-# remove duplicates
-# fill gaps with unique ones
-# def fix(ps, n):
-#     ds = duplicates(ps)
-#     for d in ds:
-#         if d in ps:
-#             ps.remove(d)
-#     return new_queen(ps, n)
-
 def initFold(container, func, accum, n, init_n):
     if (n == 0):
         return container(accum);
@@ -178,8 +168,8 @@ def probability(p):
     return random.random() <= p
 
 def nqueens(n):
-    pop = toolbox.population(n=20)
-    CXPB, MUTPB, NGEN = 0.8, 1.0/2, 600
+    pop = toolbox.population(n=10)
+    CXPB, MUTPB, NGEN = 1, n/2.0, 100000
 
     # Evaluate the entire population
     fitnesses = map(toolbox.evaluate, pop)
@@ -197,8 +187,8 @@ def nqueens(n):
                 pass
                 # print e
 
-        # Select the next generation individuals
-        offspring = toolbox.select(pop, int(math.floor(len(pop) / 4)))
+        # Select the next generation individual
+        offspring = toolbox.select(pop, 1)
 
         # Clone the selected individuals
         offspring = map(toolbox.clone, offspring)
@@ -214,20 +204,14 @@ def nqueens(n):
             if probability(MUTPB):
                 toolbox.mutate(mutant)
                 del mutant.fitness.values
-
-        best  = tools.selBest(pop, int(math.ceil(3 * len(pop) / 4)))
-
-        pop[:] = best + offspring
+        
+        pop.remove(worst[0])
+        
+        pop += offspring
 
     raise ValueError ("Failed to find a valid solution!")
 
-def toPoint(v):
-    return (v.x, v.y)
-
-def toPointLists(vs):
-    return ([v.x for v in vs], [v.y for v in vs])
-
-n = 9
+n = 20
 
 toolbox.register("attribute", random_point(n))
 toolbox.register("individual", initFold, container=creator.Individual, func=new_queen, accum=[], n=n, init_n=n)
@@ -237,6 +221,5 @@ toolbox.register("mutate", mutate, n=n)
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("evaluate", num_collisions, n=n)
 
-print toolbox.population(n=10)
 queens = nqueens(n)
 print (n, queens)
