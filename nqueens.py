@@ -26,8 +26,6 @@ Mutation (no crossover?): change one of (x,y) with probability 2/N (on average, 
 
 
 # size of board
-N = 20
-
 toolbox = base.Toolbox()
 
 class Vec2:
@@ -47,8 +45,11 @@ class Vec2:
 Get a random element of a list
 """
 def rand_from(lst):
-    idx = random.randrange(len(lst))
-    return lst[idx]
+    if len(lst) > 0:
+        idx = random.randrange(len(lst))
+        return lst[idx]
+    else:
+        return lst[0]
 
 """
 xs - ys (list subtraction)
@@ -78,7 +79,7 @@ def new_queen(ps, n):
 """
 Replace some queens
 """
-def mutate(ps, mut_prob=0.2):
+def mutate(ps, n, mut_prob=0.2):
     n = len(ps)
     num = 0
     for p in ps:
@@ -99,12 +100,22 @@ def collision(p, q, n):
 
     _p = Vec2(p.x - n, p.y - n)
 
-    for i in range(0, n):
-        pa = Vec2(_p.x + i, _p.y + i)
-        pb = Vec2(_p.x + i, _p.y - i)
-        if (pa == p or pb == q):
+    for i in range(-n, n):
+        pa = Vec2(p.x + i, p.y + i)
+        pb = Vec2(p.x + i, p.y - i)
+        if (pa == q or pb == q):
             return True
     return False
+
+# print(collision(Vec2(5, 5), Vec2(6, 6), 10))
+# print(collision(Vec2(5, 5), Vec2(6, 4), 10))
+# print(collision(Vec2(0, 0), Vec2(6, 6), 10))
+# print(collision(Vec2(9, 0), Vec2(0, 9), 10))
+
+def without(xs, x):
+    ys = deepcopy(xs)
+    ys.remove(x)
+    return ys
 
 """
 check the number of collisions against a list of points
@@ -117,6 +128,9 @@ def num_collisions(ps, n):
             if( collision(_p1, _p2, n) ):
                 cs += 1
     return (cs,)
+
+## WE MUST MINIMIZE NUM_COLLISIONS
+# print num_collisions([Vec2(0,4), Vec2(1,2), Vec2(2,0), Vec2(3,6), Vec2(4,1), Vec2(5,7), Vec2(6,5), Vec2(7,3)], 8)
 
 def random_point(n):
     def fn():
@@ -144,12 +158,12 @@ def elem(p, ps):
 
 # remove duplicates
 # fill gaps with unique ones
-def fix(ps, n):
-    ds = duplicates(ps)
-    for d in ds:
-        if d in ps:
-            ps.remove(d)
-    return new_queen(ps, n)
+# def fix(ps, n):
+#     ds = duplicates(ps)
+#     for d in ds:
+#         if d in ps:
+#             ps.remove(d)
+#     return new_queen(ps, n)
 
 def initFold(container, func, accum, n, init_n):
     if (n == 0):
@@ -160,20 +174,12 @@ def initFold(container, func, accum, n, init_n):
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
-toolbox.register("attribute", random_point(N))
-toolbox.register("individual", initFold, container=creator.Individual, func=new_queen, accum=[], n=N, init_n=N)
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-toolbox.register("mate", tools.cxOnePoint)
-toolbox.register("mutate", mutate, n=N)
-toolbox.register("select", tools.selTournament, tournsize=3)
-toolbox.register("evaluate", num_collisions, n=N)
-
 def probability(p):
     return random.random() <= p
 
 def nqueens(n):
-    pop = toolbox.population(n=100)
-    CXPB, MUTPB, NGEN = 1, 1.0/n, 20
+    pop = toolbox.population(n=20)
+    CXPB, MUTPB, NGEN = 0.8, 1.0/2, 600
 
     # Evaluate the entire population
     fitnesses = map(toolbox.evaluate, pop)
@@ -182,12 +188,12 @@ def nqueens(n):
         ind.fitness.values = fit
 
     for g in range(NGEN):
+        print "Evaluating generation " + str(g)
         for p in pop:
             e = toolbox.evaluate(p)
-            print (p, e)
             if e == (0,):
                 return p
-            else: 
+            else:
                 pass
                 # print e
 
@@ -204,53 +210,33 @@ def nqueens(n):
                 del child1.fitness.values
                 del child2.fitness.values
 
-        # fix broken children
-        map( lambda c: fix(c, n), offspring )
-
         for mutant in offspring:
             if probability(MUTPB):
                 toolbox.mutate(mutant)
                 del mutant.fitness.values
 
-        # fix broken children
-        map( lambda c: fix(c, n), offspring )
-
         best  = tools.selBest(pop, int(math.ceil(3 * len(pop) / 4)))
-        map (lambda c: fix(c, n), best)
 
-        # The population is entirely replaced by the offspring
-        pop[:] = map ( lambda c: fix(c, n), best + offspring )
+        pop[:] = best + offspring
 
     raise ValueError ("Failed to find a valid solution!")
 
-print ( nqueens(N) )
+def toPoint(v):
+    return (v.x, v.y)
 
-# print ( 
-#     fix ( 
-#         [Vec2(0, 4),
-#          Vec2(0, 4),
-#          Vec2(3, 5),
-#          Vec2(3, 0),
-#          Vec2(1, 2),
-#          Vec2(0, 4),
-#          Vec2(1, 3),
-#          Vec2(5, 3)] 
-#         , 8)
-#     )
+def toPointLists(vs):
+    return ([v.x for v in vs], [v.y for v in vs])
 
-# ## test
-# winningSolution = [(0, 4), (1, 2), (2, 0), (3, 6), (4, 1), (5, 7), (6, 5), (7, 3)]
+n = 9
 
-# print evaluate(winningSolution)
+toolbox.register("attribute", random_point(n))
+toolbox.register("individual", initFold, container=creator.Individual, func=new_queen, accum=[], n=n, init_n=n)
+toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+toolbox.register("mate", tools.cxOnePoint)
+toolbox.register("mutate", mutate, n=n)
+toolbox.register("select", tools.selTournament, tournsize=3)
+toolbox.register("evaluate", num_collisions, n=n)
 
-# for p in winningSolution:
-#     rest = list(winningSolution)
-#     rest.remove(p)
-#     for _p in rest:
-#         print 
-#         if collision(p, _p, 8):
-#             print ("p", p)
-#             print ("_p", _p)
-
-
-        
+print toolbox.population(n=10)
+queens = nqueens(n)
+print (n, queens)
