@@ -10,13 +10,15 @@ import sys
 #     return (xs, ys)
 
 def show(vs, n):
+    vs = zip(xrange(0,len(vs)), vs)
     for x in range(0, n):
         for y in range(0, n): 
             if (x, y) in vs:
-                sys.stdout.write('#')
+                sys.stdout.write('Q')
             else:
-                sys.stdout.write('~')
+                sys.stdout.write('-')
         print ""
-pts = [(7,5), (8,2), (3,8), (0,0), (6,7), (5,4), (4,1), (1,3), (2,6)]
+
+pts = [0, 5, 3, 6, 9, 7, 1, 4, 2, 8]
 
 show(pts, 9)
