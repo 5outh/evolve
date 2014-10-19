@@ -46,15 +46,15 @@ def weighted_average(x, y, alpha=0.4):
 def recombine(p1, p2, alpha=0.4):
     x1, y1 = p1
     x2, y2 = p2
-    child1 = (weighted_average(x1, x2), weighted_average(y1, y2))
-    child2 = (weighted_average(x2, x1), weighted_average(y2, y1))
+    child1 = (weighted_average(x1, x2, alpha), weighted_average(y1, y2, alpha))
+    child2 = (weighted_average(x2, x1, alpha), weighted_average(y2, y1, alpha))
     return (child1, child2)
 
 def select(population, num_individuals=2, tourn_size=3):
     """
     Select the individual with the highest fitness in a 3-way tournament
     """
-    return sorted(sample(population, tourn_size), key=unfitness, reverse=True)[0:num_individuals]
+    return [sorted(sample(population, tourn_size), key=unfitness, reverse=True)[0] for _ in range(num_individuals)]
 
 def replace(population, new_individual):
     worst = unfitness(population[0])
