@@ -6,7 +6,7 @@ Population size: 10
 Generations: 200
 Selection: 3-way tournament
 Mutation: Uniform
-Recombination: Average one with alpha != 1/2
+Recombination: Average one with alpha = 0.4
 Replacement strategy: Replace worst
 """
 
@@ -26,12 +26,12 @@ def random_y():
 def generate_individual():
     return (random_x(), random_y())
 
-def generate_initial_population(pop_size=10):
+def generate_initial_population(pop_size=40):
     return [generate_individual() for _ in range(pop_size)]
 
 def mutate(individual, mutation_percentage=0.5):
     """
-    Uniform Mutation on both x and y
+    Uniform Mutation on both x and y (aggressive)
     """
     x, y = individual
     if(random() < mutation_percentage):        
@@ -40,21 +40,22 @@ def mutate(individual, mutation_percentage=0.5):
         y = random_y()
     return (x, y)
 
-def weighted_average(x, y, alpha=0.4):
+def weighted_average(x, y, alpha=0.2):
     return ((1 - alpha) * x) + (alpha * y)
 
-def recombine(p1, p2, alpha=0.4):
+def recombine(p1, p2, alpha=0.3):
     x1, y1 = p1
     x2, y2 = p2
     child1 = (weighted_average(x1, x2, alpha), weighted_average(y1, y2, alpha))
     child2 = (weighted_average(x2, x1, alpha), weighted_average(y2, y1, alpha))
-    return (child1, child2)
+    return (mutate(child1), mutate(child2))
 
 def select(population, num_individuals=2, tourn_size=3):
     """
-    Select the individual with the highest fitness in a 3-way tournament
+    Select the individual with the lowest unfitness in a 3-way tournament
     """
-    return [sorted(sample(population, tourn_size), key=unfitness, reverse=True)[0] for _ in range(num_individuals)]
+    selection = [sorted(sample(population, tourn_size), key=unfitness, reverse=True)[0] for _ in range(num_individuals)]
+    return selection
 
 def replace(population, new_individual):
     worst = unfitness(population[0])
@@ -64,11 +65,14 @@ def replace(population, new_individual):
     population.remove(ind)
     population.append(new_individual)
 
+def average(xs):
+    return sum(xs) / len(xs)
+
 def run():
-    population = generate_initial_population()
+    population = generate_initial_population(pop_size=20)
     best = population[0]
     best_fitness = unfitness(population[0])
-    for i in range(200):
+    for i in range(100):
         p1, p2 = select(population)
         c1, c2 = recombine(p1, p2)
         # pick a random child to introduce
@@ -80,7 +84,8 @@ def run():
             if(unfitness(ind) < best_fitness):
                 best = ind
                 best_fitness = unfitness(ind)
-        print('Generation #' + str(i))
+        # print('Generation #' + str(i))
         print('best fitness:' + str(best_fitness))
+        # print('average fitness: ' + str( average( list ( map(unfitness, population) ) ) ) )
 
 run()
