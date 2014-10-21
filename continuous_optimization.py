@@ -2,20 +2,61 @@ from math import *
 from random import *
 
 """
-Population size: 10
-Generations: 200
-Selection: 3-way tournament
-Mutation: Uniform
-Recombination: Average one with alpha = 0.4
-Replacement strategy: Replace worst
+EA Type: Meta-EP Evolutionary Programming
+Population size: 40
+Generations: 50
+Mutation: Meta-EP mutation 
+Recombination: None!
+Replacement strategy: mu + mu
 """
+
+def clamp(x, minimum, maximum):
+    return max(minimum, min(maximum, x))
+
+class Individual:
+    def __init__(self, x, y, sigma_x, sigma_y):
+        self.x = x
+        self.y = y
+        self.sigma_x = sigma_x
+        self.sigma_y = sigma_y
+
+def mutate_axis(x, sigma):
+    return x + sigma * gauss(0, 1)
+
+def mutate_sigma(sigma, alpha=0.2):
+    return sigma * (1 + alpha * gauss(0, 1))
+
+def meta_mutate(individual):
+    """
+    "Meta-EP" mutation strategy
+    """
+    sigma_x = mutate_sigma(individual.sigma_x)
+    sigma_y = mutate_sigma(individual.sigma_y)
+    x = clamp( mutate_axis(individual.x, individual.sigma_x), -60, 40)
+    y = clamp( mutate_axis(individual.y, individual.sigma_y), -70, 30)
+    return Individual(x, y, sigma_x, sigma_y)
 
 def f(x, y):
     return (abs(x) + abs(y)) * (1 + abs(sin(abs(x) * pi)) + abs(sin(abs(y) * pi)))
 
-def unfitness(individual):
-    x, y = individual
-    return f(x, y)
+def f_prime(x, y):
+    return (abs(x) + abs(y)) * (1 + abs(sin(3 * abs(x) * pi)) + abs(sin(3 * abs(y) * pi)))
+
+def repopulate(population, func=f):
+    new_population = population[:]
+    for ind in population:
+        new_population.append(meta_mutate(ind))
+    new_population = sorted(new_population, key=lambda ind: unfitness(ind, func), reverse=True)[len(population):]
+    return new_population
+
+def random_individual():
+    x = random_x()
+    y = random_y()
+    return Individual(x, y, 1.0, 1.0)
+
+def unfitness(individual, func=f):
+    x, y = individual.x, individual.y
+    return func(x, y)
 
 def random_x():
     return uniform(-60, 40)
@@ -23,69 +64,29 @@ def random_x():
 def random_y():
     return uniform(-70, 30)
 
-def generate_individual():
-    return (random_x(), random_y())
-
 def generate_initial_population(pop_size=40):
-    return [generate_individual() for _ in range(pop_size)]
+    return [random_individual() for _ in range(pop_size)]
 
-def mutate(individual, mutation_percentage=0.5):
-    """
-    Uniform Mutation on both x and y (aggressive)
-    """
-    x, y = individual
-    if(random() < mutation_percentage):        
-        x = random_x()
-    if(random() < mutation_percentage):
-        y = random_y()
-    return (x, y)
-
-def weighted_average(x, y, alpha=0.2):
-    return ((1 - alpha) * x) + (alpha * y)
-
-def recombine(p1, p2, alpha=0.3):
-    x1, y1 = p1
-    x2, y2 = p2
-    child1 = (weighted_average(x1, x2, alpha), weighted_average(y1, y2, alpha))
-    child2 = (weighted_average(x2, x1, alpha), weighted_average(y2, y1, alpha))
-    return (mutate(child1), mutate(child2))
-
-def select(population, num_individuals=2, tourn_size=3):
-    """
-    Select the individual with the lowest unfitness in a 3-way tournament
-    """
-    selection = [sorted(sample(population, tourn_size), key=unfitness, reverse=True)[0] for _ in range(num_individuals)]
-    return selection
-
-def replace(population, new_individual):
-    worst = unfitness(population[0])
-    for ind in population:
-        if (unfitness(ind) > worst):
-            worst = unfitness(ind)
-    population.remove(ind)
-    population.append(new_individual)
+def run(func=f):
+    population = generate_initial_population()
+    for generation in range(50):
+        population = repopulate(population)
+    result = unfitness(min(population, key=lambda ind: unfitness(ind, func)))
+    print("Minimum fitness: " + str(result))
+    return result
 
 def average(xs):
     return sum(xs) / len(xs)
 
-def run():
-    population = generate_initial_population(pop_size=20)
-    best = population[0]
-    best_fitness = unfitness(population[0])
-    for i in range(100):
-        p1, p2 = select(population)
-        c1, c2 = recombine(p1, p2)
-        # pick a random child to introduce
-        if(random() < 0.5):
-            replace(population, c1)
-        else:
-            replace(population, c2)
-        for ind in population:
-            if(unfitness(ind) < best_fitness):
-                best = ind
-                best_fitness = unfitness(ind)
-        # print('Generation #' + str(i))
-        print('best fitness:' + str(best_fitness))
-        # print('average fitness: ' + str( average( list ( map(unfitness, population) ) ) ) )
+def main():
+    fs, fprimes = [], []
+    for i in range(10):
+        print("f_" + str(i), end=': ')
+        fs.append(run(func=f))
+        print("f'_" + str(i), end=': ')
+        fprimes.append(run(func=f_prime))
+    print("Average fs: " + str(average(fs)))
+    print("Average f's: " + str(average(fprimes)))
 
-run()
+if __name__ == '__main__':
+    main()
