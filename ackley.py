@@ -1,6 +1,7 @@
 import math
 from math import *
 from random import *
+from numpy.random import standard_cauchy
 
 """
 EA Type: Meta-EP Evolutionary Programming
@@ -23,7 +24,7 @@ def ackley(vec, a=20, b=0.2, c=TWO_PI):
     sum1 *= 1/d
     sum1 = math.sqrt(sum1)
     firstParen = -b * sum1
-    term1 = -a * math.exp(sum1)
+    term1 = a * math.exp(sum1)
 
     sum2 = 0
     for xi in vec:
@@ -38,7 +39,7 @@ def clamp(x, minimum, maximum):
 class Entry:
     def __init__(self, x, sigma):
         self.x = x
-        self.sigma = sigma
+        self.sigma = max(sigma, 0.02)
 
 class Individual:
     def __init__(self, entries):
@@ -48,14 +49,13 @@ def random_individual(dims=30):
     return Individual([Entry(random() * 60 - 30, 3.0) for _ in range(dims)])
 
 def mutate_axis(x, sigma):
-    # TODO: replace gauss with cauchy distribution
     return x + sigma * gauss(0, 1)
 
-tau = sqrt(2 * sqrt(DIMENSIONS)) ** (-1)
-tau_prime = sqrt(2 * DIMENSIONS) ** (-1)
+TAU = sqrt(2 * sqrt(DIMENSIONS)) ** (-1)
+TAU_PRIME = sqrt(2 * DIMENSIONS) ** (-1)
 
 def mutate_sigma(sigma, normal_var, alpha=0.2):
-    return sigma * exp(tau_prime * normal_var + tau * gauss(0, 1))
+    return sigma * exp(TAU_PRIME * normal_var + TAU * gauss(0, 1))
 
 def meta_mutate(individual):
     """
@@ -82,13 +82,23 @@ def generate_initial_population(pop_size=40):
     return [random_individual() for _ in range(pop_size)]
 
 def run():
-    population = generate_initial_population()
-    for generation in range(50):
+    population = generate_initial_population(100)
+    for generation in range(200):
         population = repopulate(population)
-        if(generation % 5 == 0):
-            print("Generation #" + str(generation) + " minimum fitness: " + str(unfitness(min(population, key=unfitness))))
+    result = min(population, key=unfitness)
+    return result
+
+def main():
+    results = []
+    for generation in range(10):
+        best_point = run()
+        best_fitness = unfitness(best_point)
+        print("Best point found in generation #" + str(generation) + ":")
+        print("  " + str(list(map(lambda i: round(i.x, 2), best_point.vec))))
+        print("  with fitness " + str(best_fitness))
+        results.append(best_fitness)
 
 if __name__ == '__main__':
     # print(list(map(lambda i: i.x, random_individual().vec)))
-    run()
+    main()
 
