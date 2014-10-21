@@ -11,38 +11,38 @@ Replacement strategy: mu + mu
 
 Results:
 
-f_0: Minimum fitness: 0.017103229327050638
-f'_0: Minimum fitness: 0.07173525865679307
+f_0: Best Point: (0.01, 0.003, 0.316, 0.482) with fitness ~0.01338
+f'_0: Best Point: (-0.01, -0.005, 2.7, 1.389) with fitness ~0.01623
 
-f_1: Minimum fitness: 0.07742878883092867
-f'_1: Minimum fitness: 0.04250068323190526
+f_1: Best Point: (0.001, 0.02, 0.477, 0.195) with fitness ~0.02239
+f'_1: Best Point: (-0.011, 0.006, 1.133, 0.824) with fitness ~0.01801
 
-f_2: Minimum fitness: 0.03800197666691478
-f'_2: Minimum fitness: 0.039490303992856766
+f_2: Best Point: (0.007, -0.002, 0.095, 0.41) with fitness ~0.00956
+f'_2: Best Point: (-0.011, 0.001, 0.305, 0.352) with fitness ~0.01179
 
-f_3: Minimum fitness: 0.02075663053306053
-f'_3: Minimum fitness: 0.02727126434141819
+f_3: Best Point: (0.008, -0.02, 0.141, 0.458) with fitness ~0.03018
+f'_3: Best Point: (0.004, 0.025, 0.646, 1.547) with fitness ~0.03091
 
-f_4: Minimum fitness: 0.00817374259157041
-f'_4: Minimum fitness: 0.052410359278045805
+f_4: Best Point: (0.01, -0.007, 0.853, 0.329) with fitness ~0.01715
+f'_4: Best Point: (0.007, 0.016, 0.654, 0.756) with fitness ~0.02487
 
-f_5: Minimum fitness: 0.015478132081325478
-f'_5: Minimum fitness: 0.016573926198659193
+f_5: Best Point: (0.009, -0.001, 0.574, 0.175) with fitness ~0.01075
+f'_5: Best Point: (0.005, 0.002, 0.13, 1.087) with fitness ~0.00755
 
-f_6: Minimum fitness: 0.002927698779267661
-f'_6: Minimum fitness: 0.010684366291045314
+f_6: Best Point: (0.002, -0.01, 0.112, 0.778) with fitness ~0.01201
+f'_6: Best Point: (-0.03, 0.009, 2.719, 0.31) with fitness ~0.04429
 
-f_7: Minimum fitness: 0.005506081384028646
-f'_7: Minimum fitness: 0.012671690910889793
+f_7: Best Point: (-0.0, -0.019, 0.292, 0.317) with fitness ~0.02028
+f'_7: Best Point: (-0.0, -0.01, 0.304, 0.492) with fitness ~0.01102
 
-f_8: Minimum fitness: 0.023463946956422427
-f'_8: Minimum fitness: 0.029371217165857617
+f_8: Best Point: (-0.002, -0.004, 0.172, 0.026) with fitness ~0.00591
+f'_8: Best Point: (0.003, -0.003, 0.116, 0.537) with fitness ~0.00589
 
-f_9: Minimum fitness: 0.03663268515490846
-f'_9: Minimum fitness: 0.010865349550894588
+f_9: Best Point: (-0.002, 0.008, 0.077, 0.068) with fitness ~0.01043
+f'_9: Best Point: (0.009, 0.02, 0.653, 0.982) with fitness ~0.03245
 
-Average fs: 0.024547291230547767
-Average f's: 0.031357441961836555
+Average fs: 0.015203201502824393
+Average f's: 0.02030066197117663
 """
 
 
@@ -123,6 +123,7 @@ def main():
         fs.append(unfitness(run(func=f)))
         print("f'_" + str(i), end=': ')
         fprimes.append(unfitness(run(func=f_prime)))
+        print()
     print("Average fs: " + str(average(fs)))
     print("Average f's: " + str(average(fprimes)))
 
